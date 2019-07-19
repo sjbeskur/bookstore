@@ -1,3 +1,4 @@
+
 mod book;
 
 use book::*;
@@ -5,26 +6,52 @@ use std::collections::HashMap;
 
 fn main() {
     
-    let mut shelfs: HashMap<u32,&Shelf> = HashMap::new();
+    //think: SNMP packet storage.
+    let mut shelfs: HashMap<u32,Shelf> = HashMap::new();
 
-    let b1 = Book { title: "Learn C#".to_string()  , pages: 100 };
-    let b2 = Book { title: "Learn Java".to_string(), pages: 150 };
-    let b3 = Book { title: "Learn Rust".to_string(), pages: 100000 };
 
-    let mut empty_shelf = book::Shelf{ id: 1, books: None };
-    empty_shelf.add_book(b1);
-    empty_shelf.add_book(b2);
-    empty_shelf.add_book(b3);
-
-    shelfs.insert(empty_shelf.id, &empty_shelf);
-
-    let id = 1;
-    if let Some(shelf) = shelfs.get(&id){
-        let mut s = (*shelf).clone();
-
-        if s.books.is_none(){
-            s.books = Some(HashMap::new());
-            shelfs.insert(id, &s);
-        }
+    {
+        //think: here comes new packet
+        let b1 = Book { title: "Learn C#".into(),   pages: 100 };
+        //think:add this packet to the storage
+        add_book(1, &b1, &mut shelfs);  
     }
+
+
+
+
+
+    let b2 = Book { title: "Learn Java".into(), pages: 150 };
+    add_book(1, &b2, &mut shelfs);
+
+    let b3 = Book { title: "Learn Rust".into(), pages: 100000 };
+    add_book(2, &b3, &mut shelfs);
+
+    println!("{:#?}", shelfs);
+}
+
+
+
+fn add_book(shelf_id:u32, book:&Book, shelfs:&mut HashMap<u32, Shelf>){
+    if let Some(shelf) = shelfs.get_mut(&shelf_id){
+        let mut books:HashMap<String,Book> = 
+            if let Some(books) = shelf.books.clone(){ //this will disconnect map (books) from shelf
+                books
+            }else{
+                HashMap::new()
+            };
+        books.insert(book.title.clone(), book.clone()); //adds book to books
+        shelf.books = Some(books); // sets new val(some books) to shelf
+
+    }else{
+        let mut books = HashMap::new();
+        books.insert(book.title.clone(), book.clone());
+        let shelf = book::Shelf{ id: shelf_id, books: Some(books) };
+        shelfs.insert(shelf_id, shelf);
+
+    }
+
+
+
+
 }
